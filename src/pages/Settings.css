@@ -1,0 +1,18 @@
+.settings-page {
+  max-width: 720px;
+}
+
+.settings-page-header {
+  margin-bottom: 24px;
+}
+
+.settings-page-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.settings-page-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}

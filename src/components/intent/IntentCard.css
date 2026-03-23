@@ -1,0 +1,85 @@
+/* ── AI Insights Card ── */
+
+.intent-card {
+  margin-top: 0;
+  border-radius: 0;
+  background: var(--bg-surface);
+}
+
+/* Header */
+.insights-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.insights-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+.insights-icon {
+  color: var(--accent-primary);
+}
+
+/* Body */
+.insights-body {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Horizontal pills */
+.insights-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Detail rows */
+.insights-detail-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.insights-detail-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  padding-top: 2px;
+  font-family: var(--font-mono);
+}
+
+.insights-detail-text {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.insights-detail-action {
+  font-style: italic;
+}
+
+/* Spinner */
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Churn pulse */
+.churn-pulse {
+  animation: pulse-glow-red 2s ease-in-out infinite;
+}

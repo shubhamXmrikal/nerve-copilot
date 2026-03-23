@@ -1,0 +1,40 @@
+.dashboard {
+  display: grid;
+  grid-template-columns: 65fr 35fr;
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.dashboard-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 0 0 0;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.dashboard-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Feed panel fills right column */
+.dashboard-right .transcript-feed-panel {
+  flex: 1;
+  min-height: 0;
+  border-radius: 0;
+  border: none;
+}
+
+.dashboard-right .intent-card {
+  border-radius: 0;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 0;
+}

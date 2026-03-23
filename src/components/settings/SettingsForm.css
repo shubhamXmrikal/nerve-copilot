@@ -1,0 +1,129 @@
+.settings-form {
+  max-width: 600px;
+}
+
+.settings-section {
+  margin-bottom: 4px;
+}
+
+.settings-section-header {
+  margin-bottom: 14px;
+}
+
+.settings-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.settings-section-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.settings-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Key input */
+.input-with-toggle {
+  position: relative;
+}
+
+.input-with-toggle .input {
+  padding-right: 38px;
+}
+
+.key-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  transition: color var(--transition-fast);
+}
+
+.key-toggle-btn:hover {
+  color: var(--text-secondary);
+}
+
+.settings-hint {
+  font-size: 11px;
+  color: var(--accent-warn);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Model display */
+.model-display {
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: var(--accent-secondary);
+}
+
+/* Backend row */
+.backend-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.backend-row .input {
+  flex: 1;
+}
+
+/* Health result */
+.health-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.health-ok {
+  color: var(--accent-success);
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.18);
+}
+
+.health-fail {
+  color: var(--accent-danger);
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.18);
+}
+
+/* Save row */
+.settings-save-row {
+  padding-top: 4px;
+}
+
+/* Spinner */
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

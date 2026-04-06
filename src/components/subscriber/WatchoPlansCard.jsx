@@ -26,7 +26,7 @@ export default function WatchoPlansCard() {
         const res  = await fetch(`${base}/api/watcho-plans`)
         if (!res.ok) throw new Error(`API ${res.status}`)
         const data = await res.json()
-        setPlans(Array.isArray(data) ? data : [])
+        setPlans(data.plans || [])
       } catch {
         setPlans([])
       } finally {
@@ -40,9 +40,8 @@ export default function WatchoPlansCard() {
   // Gate — after all hooks
   if (!isWatcho) return null
 
-  const filtered = plans.filter((p) =>
-    tab === 'monthly' ? p.packdurationflag === 1 : p.packdurationflag === 2
-  )
+  // All plans have both monthly + annual price — no filtering needed, tab controls which price to show
+  const filtered = plans
 
   const handleConfirm = () => {
     if (!selected) return
@@ -75,7 +74,7 @@ export default function WatchoPlansCard() {
         {confirmed ? (
           <div className="upgrade-confirmed">
             <div className="confirmed-icon">✓</div>
-            <div style={{ fontWeight: 600, fontSize: 13 }}>{selected.PackName}</div>
+            <div style={{ fontWeight: 600, fontSize: 13 }}>{selected.name}</div>
             <div className="confirmed-sub">
               Plan details shared with customer
             </div>
@@ -114,10 +113,12 @@ export default function WatchoPlansCard() {
             ) : (
               <div className="plan-options-list">
                 {filtered.map((plan) => {
-                  const isSelected = selected?.PackId === plan.PackId
+                  const isSelected = selected?.rowId === plan.rowId
+                  const price      = tab === 'monthly' ? plan.monthlyPrice : plan.annualPrice
+                  const period     = tab === 'monthly' ? '/mo' : '/yr'
                   return (
                     <div
-                      key={plan.PackId}
+                      key={plan.rowId}
                       className={[
                         'plan-option-row',
                         isSelected ? 'plan-option-row--selected' : '',
@@ -129,23 +130,16 @@ export default function WatchoPlansCard() {
                           {isSelected ? '◉' : '○'}
                         </div>
                         <div className="plan-option-details">
-                          <div className="plan-option-name">{plan.PackName}</div>
-                          <div className="plan-option-meta">
-                            {plan.NumOfApps} APPS
-                          </div>
-                          {plan.AppDetails && (
-                            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.4 }}>
-                              {plan.AppDetails}
-                            </div>
+                          <div className="plan-option-name">{plan.name}</div>
+                          {plan.annualDiscount > 0 && tab === 'annual' && (
+                            <div className="plan-option-meta">{plan.annualDiscount}% OFF</div>
                           )}
                         </div>
                       </div>
                       <div className="plan-option-right">
                         <span className="plan-option-price mono">
-                          ₹{plan.Price}
-                          <span className="plan-option-period">
-                            {plan.packdurationflag === 2 ? '/yr' : '/mo'}
-                          </span>
+                          ₹{price}
+                          <span className="plan-option-period">{period}</span>
                         </span>
                         <span className="plan-option-tax">EXCL. TAX</span>
                       </div>
@@ -161,7 +155,7 @@ export default function WatchoPlansCard() {
               disabled={!selected}
             >
               {selected ? (
-                <>CONFIRM — {selected.PackName.toUpperCase()} <ChevronRight size={16} /></>
+                <>CONFIRM — {selected.name.toUpperCase()} <ChevronRight size={16} /></>
               ) : (
                 'Select a plan to continue'
               )}

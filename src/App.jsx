@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { CheckCircle, XCircle, Info } from 'lucide-react'
 import Sidebar from './components/layout/Sidebar'
 import TopBar from './components/layout/TopBar'
+import AgentChat from './components/agent/AgentChat'
 import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
 import useAppStore from './store/useAppStore'
@@ -50,22 +51,33 @@ function StatusBar() {
   )
 }
 
+function AppShell() {
+  const location = useLocation()
+  const isSettings = location.pathname === '/settings'
+  const isAgent = location.pathname === '/agent'
+
+  return (
+    <div className="app-shell">
+      <Sidebar />
+      <div className="main-area">
+        {!isAgent && <TopBar />}
+        <div className={`page-content${isSettings ? ' page-content--settings' : ''}${isAgent ? ' page-content--agent' : ''}`}>
+          <Routes>
+            <Route path="/"         element={<Dashboard />} />
+            <Route path="/agent"    element={<AgentChat />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </div>
+        {!isAgent && <StatusBar />}
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="app-shell">
-        <Sidebar />
-        <div className="main-area">
-          <TopBar />
-          <div className="page-content">
-            <Routes>
-              <Route path="/"         element={<Dashboard />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </div>
-          <StatusBar />
-        </div>
-      </div>
+      <AppShell />
       <ToastList />
     </BrowserRouter>
   )

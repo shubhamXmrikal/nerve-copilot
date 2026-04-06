@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NERVE Agent Pipeline — Complete Flow</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0a0a0b;
+    color: #e8edf5;
+    padding: 40px 32px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #8a97ab;
+    margin-bottom: 40px;
+  }
+
+  /* ── Pipeline container ── */
+  .pipeline {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── Layer block ── */
+  .layer {
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 20px 24px;
+    background: #131315;
+  }
+  .layer + .layer { margin-top: 0; }
+
+  .layer-tag {
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 10px;
+    border-radius: 6px;
+  }
+  .tag-frontend  { background: #1e3a5f; color: #60a5fa; }
+  .tag-backend   { background: #1a3328; color: #34d399; }
+  .tag-sdk       { background: #2d1f3d; color: #c084fc; }
+  .tag-mcp       { background: #3b2209; color: #fbbf24; }
+  .tag-data      { background: #1f1a0e; color: #f59e0b; }
+  .tag-db        { background: #3b1219; color: #f87171; }
+
+  .layer-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .layer-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .num-frontend  { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  .num-backend   { background: rgba(52,211,153,0.15); color: #34d399; }
+  .num-sdk       { background: rgba(192,132,252,0.15); color: #c084fc; }
+  .num-mcp       { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .num-data      { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .num-db        { background: rgba(248,113,113,0.15); color: #f87171; }
+
+  .layer-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .layer-file {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: #8a97ab;
+    margin-left: auto;
+    background: rgba(255,255,255,0.04);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .layer-body {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #b0bcc9;
+  }
+  .layer-body strong { color: #e8edf5; font-weight: 600; }
+  .layer-body code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #60a5fa;
+  }
+  .layer-body .val { color: #34d399; }
+  .layer-body .warn { color: #fbbf24; }
+
+  /* ── Arrow connector ── */
+  .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 0;
+    position: relative;
+  }
+  .arrow-line {
+    width: 2px;
+    height: 24px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0.06));
+  }
+  .arrow-tip {
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 7px solid rgba(255,255,255,0.15);
+  }
+  .arrow-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #4a5568;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    position: absolute;
+    right: calc(50% - 160px);
+    top: 8px;
+    white-space: nowrap;
+  }
+
+  /* ── Branch arrows ── */
+  .branch {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .branch-item {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02);
+  }
+  .branch-title {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .branch-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dot-blue { background: #60a5fa; }
+  .dot-green { background: #34d399; }
+  .dot-amber { background: #fbbf24; }
+  .branch-desc {
+    font-size: 11px;
+    color: #8a97ab;
+    line-height: 1.5;
+  }
+  .branch-desc code {
+    font-size: 10px;
+    background: rgba(255,255,255,0.05);
+    padding: 0 4px;
+    border-radius: 2px;
+    color: #8a97ab;
+  }
+
+  /* ── SSE events table ── */
+  .sse-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .sse-chip {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-align: center;
+    letter-spacing: 0.03em;
+  }
+  .sse-init    { background: rgba(96,165,250,0.12); color: #60a5fa; }
+  .sse-think   { background: rgba(192,132,252,0.12); color: #c084fc; }
+  .sse-tool    { background: rgba(251,191,36,0.12); color: #fbbf24; }
+  .sse-done    { background: rgba(52,211,153,0.12); color: #34d399; }
+  .sse-err     { background: rgba(248,113,113,0.12); color: #f87171; }
+  .sse-heart   { background: rgba(255,255,255,0.06); color: #4a5568; }
+
+  /* ── Tools grid ── */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .tool-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    border: 1px solid rgba(251,191,36,0.12);
+    background: rgba(251,191,36,0.04);
+    color: #d4a017;
+  }
+  .tool-chip.graph-tool { border-color: rgba(96,165,250,0.15); background: rgba(96,165,250,0.04); color: #7ab8f5; }
+  .tool-chip.code-tool  { border-color: rgba(52,211,153,0.15); background: rgba(52,211,153,0.04); color: #5ee0b1; }
+  .tool-chip.db-tool    { border-color: rgba(248,113,113,0.15); background: rgba(248,113,113,0.04); color: #f87171; }
+
+  /* ── Knowledge files list ── */
+  .know-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .know-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 4px 9px;
+    border-radius: 5px;
+    background: rgba(192,132,252,0.08);
+    border: 1px solid rgba(192,132,252,0.15);
+    color: #c084fc;
+  }
+
+  /* ── Return path ── */
+  .return-arrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 32px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    border: 1px dashed rgba(52,211,153,0.25);
+    background: rgba(52,211,153,0.03);
+  }
+  .return-arrow-icon {
+    font-size: 18px;
+    color: #34d399;
+  }
+  .return-arrow-text {
+    font-size: 12px;
+    color: #8a97ab;
+    line-height: 1.6;
+  }
+  .return-arrow-text strong { color: #34d399; }
+</style>
+</head>
+<body>
+
+<h1>NERVE Agent Pipeline</h1>
+<p class="subtitle">User Query &rarr; Claude Agent SDK &rarr; MCP Tools &rarr; Live DB &rarr; Streamed Response</p>
+
+<div class="pipeline">
+
+  <!-- ── STEP 1: Frontend ── -->
+  <div class="layer">
+    <span class="layer-tag tag-frontend">FRONTEND</span>
+    <div class="layer-header">
+      <div class="layer-num num-frontend">1</div>
+      <div class="layer-title">User types a question</div>
+      <span class="layer-file">nerve-copilot / AgentChat.jsx</span>
+    </div>
+    <div class="layer-body">
+      User opens <code>/agent</code> page and types: <strong>"Which regions have the highest complaint volume?"</strong><br><br>
+      <code>handleSubmit()</code> fires &rarr; sends <code>POST /api/agent/query</code> with body <code class="val">{ question: "..." }</code><br>
+      Opens a <strong>ReadableStream</strong> on <code>response.body</code> to consume Server-Sent Events in real-time.<br>
+      <code>processSSEEvent()</code> parses each event and updates the React state &rarr; UI re-renders live.
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-tip"></div>
+    <span class="arrow-label">POST /api/agent/query { question }</span>
+  </div>
+
+  <!-- ── STEP 2: Backend Controller ── -->
+  <div class="layer">
+    <span class="layer-tag tag-backend">BACKEND</span>
+    <div class="layer-header">
+      <div class="layer-num num-backend">2</div>
+      <div class="layer-title">SSE Stream Setup + Agent SDK Call</div>
+      <span class="layer-file">nerve-backend / agentController.js</span>
+    </div>
+    <div class="layer-body">
+      <code>queryAgent()</code> sets SSE headers: <code>Content-Type: text/event-stream</code><br>
+      Starts <strong>15s heartbeat</strong> interval to prevent timeout.<br>
+      Listens on <code>res.on('close')</code> to detect client disconnect.<br><br>
+      Calls <code>buildSystemPrompt()</code> to load the knowledge base, then invokes:
+      <br><code>query({ prompt, options: { systemPrompt, mcpServers: { ibcrm }, maxTurns: 25 } })</code><br><br>
+      Iterates <code>for await (const message of query(...))</code> and emits SSE events:
+      <div class="sse-grid">
+        <div class="sse-chip sse-init">init</div>
+        <div class="sse-chip sse-think">thinking</div>
+        <div class="sse-chip sse-tool">tool_start</div>
+        <div class="sse-chip sse-tool">tool_result</div>
+        <div class="sse-chip sse-done">done</div>
+        <div class="sse-chip sse-err">error</div>
+        <div class="sse-chip sse-heart">heartbeat</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-tip"></div>
+    <span class="arrow-label">buildSystemPrompt() — loads 4 knowledge files</span>
+  </div>
+
+  <!-- ── STEP 3: System Prompt ── -->
+  <div class="layer">
+    <span class="layer-tag tag-sdk">KNOWLEDGE</span>
+    <div class="layer-header">
+      <div class="layer-num num-sdk">3</div>
+      <div class="layer-title">System Prompt Assembly (~64K chars)</div>
+      <span class="layer-file">nerve-backend / agentSystemPrompt.js</span>
+    </div>
+    <div class="layer-body">
+      <code>buildSystemPrompt()</code> reads 4 files from <code>ibcrm-knowledge/</code> and concatenates them into one system prompt. Cached after first load.
+      <div class="know-list">
+        <span class="know-chip">SKILL.md &mdash; agent instructions + rules</span>
+        <span class="know-chip">architecture.md &mdash; module structure</span>
+        <span class="know-chip">call-flow.md &mdash; call tagging lifecycle</span>
+        <span class="know-chip">table-catalog.md &mdash; DB schema reference</span>
+      </div>
+      <br>This prompt tells Claude <strong>what tools exist</strong>, <strong>how the CRM works</strong>, and <strong>how to write SQL queries</strong> (WITH NOLOCK, table names, join patterns).
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-tip"></div>
+    <span class="arrow-label">Agent SDK spawns: python server.py (stdio)</span>
+  </div>
+
+  <!-- ── STEP 4: Agent SDK Loop ── -->
+  <div class="layer">
+    <span class="layer-tag tag-sdk">AGENT SDK</span>
+    <div class="layer-header">
+      <div class="layer-num num-sdk">4</div>
+      <div class="layer-title">Claude Reasoning Loop (up to 25 turns)</div>
+      <span class="layer-file">@anthropic-ai/claude-agent-sdk</span>
+    </div>
+    <div class="layer-body">
+      Claude reads the system prompt + user question, then <strong>decides which tools to call</strong>.<br><br>
+      For <em>"Which regions have highest complaint volume?"</em> a typical loop:
+      <ol style="margin: 8px 0 0 18px; line-height: 2;">
+        <li>Calls <code class="warn">search_graph</code> &mdash; finds complaint-related tables/SPs</li>
+        <li>Calls <code class="warn">query_db</code> &mdash; joins ComplaintTRN &rarr; CityMaster &rarr; DistrictMaster &rarr; StateMaster</li>
+        <li>Gets rows back, formats the final answer with table + analysis</li>
+      </ol>
+      <br>Each tool call goes to the <strong>MCP Server</strong> below. The SDK handles the tool_use &rarr; tool_result &rarr; next_turn cycle automatically.
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-tip"></div>
+    <span class="arrow-label">MCP stdio &mdash; tool_use / tool_result JSON-RPC</span>
+  </div>
+
+  <!-- ── STEP 5: MCP Server ── -->
+  <div class="layer">
+    <span class="layer-tag tag-mcp">MCP SERVER</span>
+    <div class="layer-header">
+      <div class="layer-num num-mcp">5</div>
+      <div class="layer-title">17 CRM Tools (Graph + Code + DB)</div>
+      <span class="layer-file">tools / mcp_server / server.py</span>
+    </div>
+    <div class="layer-body">
+      Python FastMCP server running as child process via <strong>stdio transport</strong>. Exposes 17 tools in 3 categories:
+      <div class="branch" style="margin-top:10px">
+        <div class="branch-item">
+          <div class="branch-title"><span class="branch-dot dot-blue"></span> Graph Tools (10)</div>
+          <div class="branch-desc">Query the dependency graph<br>(18,507 nodes, 28,014 edges)<br><code>full_chain_graph.json</code></div>
+          <div class="tools-grid" style="grid-template-columns:1fr 1fr; margin-top:6px">
+            <div class="tool-chip graph-tool">search_graph</div>
+            <div class="tool-chip graph-tool">trace_page_chain</div>
+            <div class="tool-chip graph-tool">find_sp_users</div>
+            <div class="tool-chip graph-tool">list_page_sps</div>
+            <div class="tool-chip graph-tool">page_connections</div>
+            <div class="tool-chip graph-tool">list_inactive</div>
+            <div class="tool-chip graph-tool">graph_stats</div>
+            <div class="tool-chip graph-tool">find_bl_callers</div>
+            <div class="tool-chip graph-tool">top_stored_procs</div>
+            <div class="tool-chip graph-tool">list_module_pages</div>
+          </div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-title"><span class="branch-dot dot-green"></span> Code Tools (5)</div>
+          <div class="branch-desc">Read source files &amp; docs<br>from project directories</div>
+          <div class="tools-grid" style="grid-template-columns:1fr; margin-top:6px">
+            <div class="tool-chip code-tool">read_reference</div>
+            <div class="tool-chip code-tool">read_sp_definition</div>
+            <div class="tool-chip code-tool">read_source_file</div>
+            <div class="tool-chip code-tool">search_code</div>
+            <div class="tool-chip code-tool">list_files</div>
+          </div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-title"><span class="branch-dot dot-amber"></span> DB Tools (2)</div>
+          <div class="branch-desc">Live SQL Server queries<br>via <strong>pymssql</strong> direct connect</div>
+          <div class="tools-grid" style="grid-template-columns:1fr; margin-top:6px">
+            <div class="tool-chip db-tool">query_db</div>
+            <div class="tool-chip db-tool">exec_sp</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-tip"></div>
+    <span class="arrow-label">pymssql direct connect (or file relay fallback)</span>
+  </div>
+
+  <!-- ── STEP 6: DB ── -->
+  <div class="layer">
+    <span class="layer-tag tag-db">DATABASE</span>
+    <div class="layer-header">
+      <div class="layer-num num-db">6</div>
+      <div class="layer-title">SQL Server — Live Query Execution</div>
+      <span class="layer-file">DevDishV2n1Ln.dishtvindia-new.in:21443</span>
+    </div>
+    <div class="layer-body">
+      <strong>Two paths to the DB:</strong>
+
+      <div class="branch" style="margin-top: 10px">
+        <div class="branch-item">
+          <div class="branch-title"><span class="branch-dot dot-green"></span> Path A: Direct (MCP Server)</div>
+          <div class="branch-desc">
+            <code>server.py</code> connects directly via <strong>pymssql</strong><br>
+            Works when the machine running <code>nerve-backend</code> has VPN/network access to SQL Server
+          </div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-title"><span class="branch-dot dot-amber"></span> Path B: File Relay (Sandbox)</div>
+          <div class="branch-desc">
+            <code>query.py</code> writes <code>request_*.json</code><br>
+            <code>watcher.py</code> on Windows picks up &rarr; executes &rarr; writes <code>response_*.json</code><br>
+            Used when Claude sandbox can't reach SQL Server directly
+          </div>
+        </div>
+      </div>
+      <br>
+      <strong>Safety:</strong> All queries wrapped in <code>READ UNCOMMITTED</code>. Regex blocks INSERT / UPDATE / DELETE / DROP / ALTER. Only <code>usp_*</code> SPs allowed.<br>
+      <strong>DB:</strong> <code>SMSdth2003</code> (primary) &mdash; User: <code>MRIKAL_AI</code>
+    </div>
+  </div>
+
+  <!-- ── Return path ── -->
+  <div class="return-arrow">
+    <div class="return-arrow-icon">&uarr;</div>
+    <div class="return-arrow-text">
+      <strong>Response flows back up:</strong>
+      DB rows &rarr; MCP tool result JSON &rarr; Agent SDK (Claude formats the answer) &rarr; Backend emits <code>done</code> SSE event with final markdown &rarr; Frontend renders with tables, bold, code blocks
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

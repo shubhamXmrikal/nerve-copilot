@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, User, Tv, Gift, Clock, Settings, LogOut } from "lucide-react";
+import { Home, User, Tv, Gift, Clock, Settings, LogOut, Sparkles } from "lucide-react";
 import useAppStore from "../../store/useAppStore";
 import "./Sidebar.css";
 
@@ -27,7 +27,6 @@ export default function Sidebar() {
       <nav className="sidebar-nav">
         {navItems.map(({ to, label, icon: Icon }) => {
           const isHash = to.startsWith("#");
-          const isActive = isHash ? false : location.pathname === to;
 
           if (isHash) {
             return (
@@ -55,8 +54,19 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer icons */}
+      {/* Footer */}
       <div className="sidebar-footer">
+        <NavLink
+          to="/agent"
+          className={({ isActive }) =>
+            `sidebar-nav-item ${isActive ? "sidebar-nav-item--active" : ""}`
+          }
+          title="CRM AGENT"
+        >
+          <Sparkles size={20} strokeWidth={1.6} />
+          <span className="sidebar-nav-label">AGENT</span>
+        </NavLink>
+
         <NavLink
           to="/settings"
           className={({ isActive }) =>

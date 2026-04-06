@@ -159,9 +159,20 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0;
 }
 
+/* Settings page — scrollable container */
+.page-content--settings {
+  overflow-y: auto;
+}
+
+/* Agent page — full bleed, no padding */
+.page-content--agent {
+  overflow: hidden;
+}
+
 /* Settings page padding override */
 .settings-page {
   padding: 20px 24px;
+  padding-bottom: 48px;
 }
 
 /* ===== STATUS BAR ===== */

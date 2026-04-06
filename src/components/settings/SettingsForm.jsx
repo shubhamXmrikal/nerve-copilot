@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, EyeOff, CheckCircle, XCircle, Loader2, RotateCcw } from 'lucide-react'
+import { Eye, EyeOff, CheckCircle, XCircle, Loader2, RotateCcw, Volume2, BarChart3 } from 'lucide-react'
 import useAppStore from '../../store/useAppStore'
 import './SettingsForm.css'
 
@@ -10,17 +10,57 @@ export default function SettingsForm() {
   const [localAgentName, setLocalAgentName] = useState(store.agentName)
   const [localApiKey,    setLocalApiKey]     = useState(store.apiKey)
   const [localBackendUrl, setLocalBackendUrl] = useState(store.backendUrl)
+  const [localGeminiKey,  setLocalGeminiKey]  = useState(store.geminiApiKey)
+  const [localUseGemini,  setLocalUseGemini]  = useState(store.useGeminiTts)
+  const [localShowTokens, setLocalShowTokens] = useState(store.showTokenUsage)
 
   const [showKey, setShowKey] = useState(false)
+  const [showGeminiKey, setShowGeminiKey] = useState(false)
   const [healthStatus, setHealthStatus] = useState(null) // null | 'ok' | 'fail'
   const [testingHealth, setTestingHealth] = useState(false)
+  const [ttsTestStatus, setTtsTestStatus] = useState(null) // null | 'playing' | 'ok' | 'fail'
 
   const handleSave = () => {
     store.setAgentId(localAgentId)
     store.setAgentName(localAgentName)
     store.setApiKey(localApiKey)
     store.setBackendUrl(localBackendUrl)
+    store.setGeminiApiKey(localGeminiKey)
+    store.setUseGeminiTts(localUseGemini)
+    store.setShowTokenUsage(localShowTokens)
     store.addToast({ type: 'success', message: 'Settings saved.' })
+  }
+
+  const handleTestTts = async () => {
+    if (!localGeminiKey.trim()) {
+      store.addToast({ type: 'error', message: 'Gemini API key is empty.' })
+      return
+    }
+    const base = (localBackendUrl || 'http://localhost:3001').replace(/\/$/, '')
+    setTtsTestStatus('playing')
+    try {
+      const res = await fetch(`${base}/api/tts/gemini`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-gemini-key': localGeminiKey,
+        },
+        body: JSON.stringify({ text: 'Namaste, main Priya hun. DishTV mein aapka swagat hai.' }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      audio.onended = () => { URL.revokeObjectURL(url); setTtsTestStatus('ok') }
+      audio.onerror = () => { URL.revokeObjectURL(url); setTtsTestStatus('fail') }
+      audio.play()
+    } catch (err) {
+      setTtsTestStatus('fail')
+      store.addToast({ type: 'error', message: `TTS test failed: ${err.message}` })
+    }
   }
 
   const handleTestConnection = async () => {
@@ -115,6 +155,129 @@ export default function SettingsForm() {
           <div className="settings-field">
             <label className="label">Model</label>
             <div className="model-display mono">claude-sonnet-4-5</div>
+          </div>
+        </div>
+      </section>
+
+      <div className="divider" />
+
+      {/* Voice / TTS Configuration */}
+      <section className="settings-section">
+        <div className="settings-section-header">
+          <h3 className="settings-section-title">Voice / TTS</h3>
+          <p className="settings-section-desc">Switch between browser speech and Gemini AI voice for natural-sounding Hinglish.</p>
+        </div>
+        <div className="settings-fields">
+
+          {/* Toggle */}
+          <div className="settings-field">
+            <label className="tts-toggle-row">
+              <span className="tts-toggle-label">
+                <Volume2 size={14} />
+                Use Gemini TTS
+              </span>
+              <span className={`tts-toggle ${localUseGemini ? 'tts-toggle--on' : ''}`}
+                    onClick={() => setLocalUseGemini(v => !v)}
+                    role="switch"
+                    aria-checked={localUseGemini}
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setLocalUseGemini(v => !v) }}
+              >
+                <span className="tts-toggle-knob" />
+              </span>
+            </label>
+            <p className="settings-hint" style={{ color: 'var(--text-muted)' }}>
+              {localUseGemini
+                ? 'Gemini 2.5 Flash TTS — natural multilingual voice via backend proxy.'
+                : 'Browser SpeechSynthesis — works offline, robotic quality.'}
+            </p>
+          </div>
+
+          {/* Gemini API Key (shown only when toggle is on) */}
+          {localUseGemini && (
+            <>
+              <div className="settings-field">
+                <label className="label">Gemini API Key</label>
+                <div className="input-with-toggle">
+                  <input
+                    type={showGeminiKey ? 'text' : 'password'}
+                    className="input"
+                    placeholder="AIza..."
+                    value={localGeminiKey}
+                    onChange={(e) => setLocalGeminiKey(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="key-toggle-btn"
+                    onClick={() => setShowGeminiKey((v) => !v)}
+                    tabIndex={-1}
+                  >
+                    {showGeminiKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+                <p className="settings-hint">
+                  Key is sent to your backend proxy — never exposed in the browser.
+                </p>
+              </div>
+
+              <div className="settings-field">
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleTestTts}
+                  disabled={ttsTestStatus === 'playing'}
+                >
+                  {ttsTestStatus === 'playing' ? (
+                    <><Loader2 size={13} className="spin" /> Playing test&hellip;</>
+                  ) : (
+                    <><Volume2 size={13} /> Test Gemini Voice</>
+                  )}
+                </button>
+                {ttsTestStatus === 'ok' && (
+                  <div className="health-result health-ok">
+                    <CheckCircle size={13} /> Voice played successfully
+                  </div>
+                )}
+                {ttsTestStatus === 'fail' && (
+                  <div className="health-result health-fail">
+                    <XCircle size={13} /> TTS failed — check API key &amp; backend
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <div className="divider" />
+
+      {/* CRM Agent */}
+      <section className="settings-section">
+        <div className="settings-section-header">
+          <h3 className="settings-section-title">CRM Agent</h3>
+          <p className="settings-section-desc">Configure the AI copilot agent behaviour and diagnostics.</p>
+        </div>
+        <div className="settings-fields">
+          <div className="settings-field">
+            <label className="tts-toggle-row">
+              <span className="tts-toggle-label">
+                <BarChart3 size={14} />
+                Show Token Consumption
+              </span>
+              <span className={`tts-toggle ${localShowTokens ? 'tts-toggle--on' : ''}`}
+                    onClick={() => setLocalShowTokens(v => !v)}
+                    role="switch"
+                    aria-checked={localShowTokens}
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setLocalShowTokens(v => !v) }}
+              >
+                <span className="tts-toggle-knob" />
+              </span>
+            </label>
+            <p className="settings-hint" style={{ color: 'var(--text-muted)' }}>
+              {localShowTokens
+                ? 'Token usage and estimated cost will appear below each agent response.'
+                : 'Token consumption details are hidden.'}
+            </p>
           </div>
         </div>
       </section>

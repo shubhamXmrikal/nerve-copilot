@@ -11,6 +11,9 @@ const useAppStore = create(
       agentName: '',
       apiKey: '',
       backendUrl: '',
+      geminiApiKey: '',
+      useGeminiTts: false,
+      showTokenUsage: false,
 
       // Session state (not persisted)
       vcNo: '',
@@ -31,6 +34,9 @@ const useAppStore = create(
       setAgentName:  (v) => set({ agentName: v }),
       setApiKey:     (v) => set({ apiKey: v }),
       setBackendUrl: (v) => set({ backendUrl: v }),
+      setGeminiApiKey:  (v) => set({ geminiApiKey: v }),
+      setUseGeminiTts:  (v) => set({ useGeminiTts: v }),
+      setShowTokenUsage: (v) => set({ showTokenUsage: v }),
 
       // ── Session actions ────────────────────────────────────
       setVcNo:                 (v) => set({ vcNo: v }),
@@ -106,10 +112,13 @@ const useAppStore = create(
     {
       name: 'nerve-settings',
       partialize: (state) => ({
-        agentId:    state.agentId,
-        agentName:  state.agentName,
-        apiKey:     state.apiKey,
-        backendUrl: state.backendUrl,
+        agentId:      state.agentId,
+        agentName:    state.agentName,
+        apiKey:       state.apiKey,
+        backendUrl:   state.backendUrl,
+        geminiApiKey: state.geminiApiKey,
+        useGeminiTts: state.useGeminiTts,
+        showTokenUsage: state.showTokenUsage,
       }),
     }
   )

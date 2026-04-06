@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Play, RotateCcw, Loader2, PhoneCall, PhoneOff, Zap } from 'lucide-react'
 import useAppStore from '../../store/useAppStore'
 import demoTranscripts from '../../data/demoTranscripts'
+import LiveAudioPanel from './LiveAudioPanel'
 import './TranscriptFeed.css'
 
 const SYSTEM_PROMPT = `You are an AI assistant for DishTV customer service. Analyze the call transcript and return ONLY a JSON object with these exact fields:
@@ -45,6 +46,7 @@ function highlightVc(text) {
 const LINE_DELAY = { agent: 700, customer: 900, system: 500 }
 
 export default function TranscriptFeed() {
+  const [mode, setMode]                     = useState('demo') // 'demo' | 'live'
   const [selectedId, setSelectedId]         = useState('')
   const [parsedLines, setParsedLines]       = useState([])
   const [displayedLines, setDisplayedLines] = useState([])
@@ -226,116 +228,137 @@ export default function TranscriptFeed() {
 
   return (
     <div className="transcript-feed-panel">
-      {/* ── Header: LIVE TRANSCRIPT ─────────────────────────────────────────── */}
+      {/* ── Header: LIVE TRANSCRIPT + mode toggle ───────────────────────────── */}
       <div className="feed-header">
         <div className="feed-header-left">
           <span className="feed-header-title">LIVE TRANSCRIPT</span>
         </div>
-        <div className="feed-header-right">
-          {isPlaying && (
+        <div className="feed-header-right" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {mode === 'demo' && isPlaying && (
             <span className="feed-rec-indicator">
               <span className="feed-rec-dot" />
               REC
             </span>
           )}
+          <div className="feed-mode-toggle">
+            <button
+              className={`feed-mode-btn${mode === 'demo' ? ' active' : ''}`}
+              onClick={() => setMode('demo')}
+            >
+              Demo
+            </button>
+            <button
+              className={`feed-mode-btn${mode === 'live' ? ' active' : ''}`}
+              onClick={() => setMode('live')}
+            >
+              Live Audio
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ── Compact control bar ──────────────────────────────────────────────── */}
-      <div className="feed-controls">
-        <select
-          className="feed-select"
-          value={selectedId}
-          onChange={handleSelect}
-        >
-          <option value="">Select scenario...</option>
-          {demoTranscripts.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.title}
-            </option>
-          ))}
-        </select>
+      {/* ── DEMO MODE ────────────────────────────────────────────────────────── */}
+      {mode === 'demo' && (
+        <>
+          {/* Compact control bar */}
+          <div className="feed-controls">
+            <select
+              className="feed-select"
+              value={selectedId}
+              onChange={handleSelect}
+            >
+              <option value="">Select scenario...</option>
+              {demoTranscripts.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.title}
+                </option>
+              ))}
+            </select>
 
-        <div className="feed-controls-right">
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={handleStart}
-            disabled={!parsedLines.length || isPlaying || isClassifying}
-            title={playbackDone ? 'Replay call' : 'Start call playback'}
-          >
-            {isPlaying ? (
-              <><PhoneCall size={12} className="pulse-icon" /> Live</>
-            ) : playbackDone ? (
-              <><RotateCcw size={12} /> Replay</>
-            ) : (
-              <><Play size={12} /> Start</>
+            <div className="feed-controls-right">
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={handleStart}
+                disabled={!parsedLines.length || isPlaying || isClassifying}
+                title={playbackDone ? 'Replay call' : 'Start call playback'}
+              >
+                {isPlaying ? (
+                  <><PhoneCall size={12} className="pulse-icon" /> Live</>
+                ) : playbackDone ? (
+                  <><RotateCcw size={12} /> Replay</>
+                ) : (
+                  <><Play size={12} /> Start</>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Transcript feed */}
+          <div className="feed-body" ref={feedRef}>
+            {displayedLines.length === 0 && !isPlaying && (
+              <div className="feed-empty">
+                <PhoneOff size={24} color="var(--text-muted)" />
+                <span>Select a scenario and click <strong>Start</strong></span>
+              </div>
             )}
-          </button>
-        </div>
-      </div>
 
-      {/* ── Live transcript feed ─────────────────────────────────────────────── */}
-      <div className="feed-body" ref={feedRef}>
-        {displayedLines.length === 0 && !isPlaying && (
-          <div className="feed-empty">
-            <PhoneOff size={24} color="var(--text-muted)" />
-            <span>Select a scenario and click <strong>Start</strong></span>
+            {displayedLines.map((line) => (
+              <div
+                key={line.id}
+                className={`feed-line feed-line--${line.speaker} animate-in`}
+              >
+                <div className="feed-speaker-label">
+                  <span className={`feed-speaker feed-speaker--${line.speaker}`}>
+                    {line.speaker === 'agent' ? 'AGENT' : line.speaker === 'customer' ? 'CUSTOMER' : ''}
+                  </span>
+                </div>
+                <div className="feed-bubble">
+                  <span
+                    className="feed-text"
+                    dangerouslySetInnerHTML={{ __html: highlightVc(line.text) }}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {isPlaying && (
+              <div className="feed-typing">
+                <span /><span /><span />
+              </div>
+            )}
           </div>
-        )}
 
-        {displayedLines.map((line) => (
-          <div
-            key={line.id}
-            className={`feed-line feed-line--${line.speaker} animate-in`}
-          >
-            <div className="feed-speaker-label">
-              <span className={`feed-speaker feed-speaker--${line.speaker}`}>
-                {line.speaker === 'agent' ? 'AGENT' : line.speaker === 'customer' ? 'CUSTOMER' : ''}
-              </span>
+          {/* Status bar */}
+          {(isPlaying || playbackDone || vcNo || isClassifying) && (
+            <div className="feed-status-bar">
+              {isPlaying && (
+                <span className="feed-status-item feed-status-live">
+                  <span className="live-dot" /> Recording
+                </span>
+              )}
+              {playbackDone && !isPlaying && (
+                <span className="feed-status-item">
+                  {displayedLines.length} lines transcribed
+                </span>
+              )}
+              {isClassifying && (
+                <span className="feed-status-item feed-status-classifying">
+                  <Zap size={11} className="spin" /> Analyzing intent...
+                </span>
+              )}
+              {vcNo && (
+                <span className="feed-status-item feed-status-vc">
+                  VC detected: <span className="mono">{vcNo}</span>
+                  {isLoadingSubs && <Loader2 size={11} className="spin" style={{ marginLeft: 4 }} />}
+                </span>
+              )}
             </div>
-            <div className="feed-bubble">
-              <span
-                className="feed-text"
-                dangerouslySetInnerHTML={{ __html: highlightVc(line.text) }}
-              />
-            </div>
-          </div>
-        ))}
-
-        {/* Typing indicator while playing */}
-        {isPlaying && (
-          <div className="feed-typing">
-            <span /><span /><span />
-          </div>
-        )}
-      </div>
-
-      {/* ── Status bar ──────────────────────────────────────────────────────── */}
-      {(isPlaying || playbackDone || vcNo || isClassifying) && (
-        <div className="feed-status-bar">
-          {isPlaying && (
-            <span className="feed-status-item feed-status-live">
-              <span className="live-dot" /> Recording
-            </span>
           )}
-          {playbackDone && !isPlaying && (
-            <span className="feed-status-item">
-              {displayedLines.length} lines transcribed
-            </span>
-          )}
-          {isClassifying && (
-            <span className="feed-status-item feed-status-classifying">
-              <Zap size={11} className="spin" /> Analyzing intent...
-            </span>
-          )}
-          {vcNo && (
-            <span className="feed-status-item feed-status-vc">
-              VC detected: <span className="mono">{vcNo}</span>
-              {isLoadingSubs && <Loader2 size={11} className="spin" style={{ marginLeft: 4 }} />}
-            </span>
-          )}
-        </div>
+        </>
       )}
+
+      {/* ── LIVE AUDIO MODE ──────────────────────────────────────────────────── */}
+      {mode === 'live' && <LiveAudioPanel />}
     </div>
   )
 }
